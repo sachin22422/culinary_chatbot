@@ -3,101 +3,185 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
-# Nutrient to ingredient mapping
 nutrient_map = {
+    "vitamin a": ["carrot", "sweet potato", "spinach", "kale", "egg", "butter"],
     "vitamin c": ["orange", "lemon", "lime", "bell pepper", "broccoli", "strawberry", "kiwi"],
-    "protein": ["chicken", "lentils", "tofu", "beans", "quinoa", "eggs"],
-    "fiber": ["oats", "beans", "lentils", "whole wheat", "broccoli"],
-    "iron": ["spinach", "red meat", "lentils", "tofu", "pumpkin seeds"],
+    "protein": ["chicken", "lentils", "tofu", "beans", "quinoa", "eggs", "beef", "fish", "shrimp"],
+    "fiber": ["oats", "beans", "lentils", "whole wheat", "broccoli", "chickpea"],
+    "iron": ["spinach", "red meat", "lentils", "tofu", "pumpkin seeds", "beef"],
     "calcium": ["milk", "cheese", "yogurt", "tofu", "kale"],
 }
+vitamin_ingredients = []
+for key, ingredients in nutrient_map.items():
+    if key.startswith("vitamin"):
+        vitamin_ingredients.extend(ingredients)
+nutrient_map["vitamin"] = list(set(vitamin_ingredients))
 
-# Ingredient substitutions
+ingredient_to_nutrient_map = {}
+for nutrient, ingredients in nutrient_map.items():
+    for ingredient in ingredients:
+        ingredient_to_nutrient_map[ingredient] = nutrient
+
 substitutions = {
     "sugar": ["honey", "maple syrup", "stevia", "dates"],
     "butter": ["olive oil", "coconut oil", "ghee", "applesauce"],
     "cream": ["coconut milk", "greek yogurt", "cashew cream"],
     "egg": ["flaxseed meal", "chia seeds", "applesauce", "banana"],
 }
-
-# NEW: Simple knowledge base for health benefits
 health_benefits_info = {
-    "turmeric": "Turmeric contains curcumin, a compound with powerful anti-inflammatory and antioxidant properties. It's often used in traditional medicine.",
-    "cardamom": "Cardamom is rich in antioxidants and may help with digestive problems, lower blood pressure, and fight inflammation.",
-    "ginger": "Ginger is well-known for its ability to soothe nausea and indigestion. It also has strong anti-inflammatory and antioxidant effects.",
-    "quinoa": "Quinoa is a complete protein, meaning it contains all nine essential amino acids. It's also high in fiber, magnesium, B vitamins, iron, and potassium.",
+    "turmeric": "Turmeric is a spice with powerful anti-inflammatory and antioxidant properties.",
+    "ginger": "Ginger is known to help with nausea and indigestion.",
+    "quinoa": "Quinoa is a complete protein, containing all nine essential amino acids."
 }
 
-# Load and preprocess recipe data
+translations_db = {
+    'hi': { 
+        'hello': 'नमस्ते', 'recipe': 'रेसिपी', 'thank you': 'धन्यवाद', 'soup': 'सूप', 'chicken': 'चिकन',
+        'Here are some recipes I found for you:': 'यहाँ आपके लिए कुछ रेसिपी हैं:',
+        "I couldn't find any recipes matching your query. Please try different keywords!": "मुझे आपकी क्वेरी से मेल खाने वाली कोई रेसिपी नहीं मिली। कृपया दूसरे कीवर्ड्स के साथ प्रयास करें!",
+        "Time:": "समय:", "Servings:": "सर्विंग्स:"
+    },
+    'en': { 
+        'नमस्ते': 'hello', 'रेसिपी': 'recipe', 'धन्यवाद': 'thank you', 'सूप': 'soup', 'चिकन': 'chicken',
+        'चावल': 'rice', 'पनीर': 'paneer', 'दाल': 'lentil', 'मसाला': 'spice'
+    }
+}
+
+
 def load_data():
-    # --- Load OLD recipes ---
-    recipe_data_path = os.path.join(os.path.dirname(__file__), "recipe_data_2.csv")
-    old_df = pd.read_csv(recipe_data_path)
-    old_df.dropna(subset=["Ingredients", "Recipe Name"], inplace=True)
-    old_df["Recipe URL"] = old_df.get("Recipe URL", "https://example.com")  # fallback if column missing
-    old_df["full_text"] = old_df["Recipe Name"] + " " + old_df["Ingredients"]
+    """
+    Loads, merges, and correctly populates the 'Dietary' column for filtering.
+    """
+    try:
+        base_dir = os.path.dirname(__file__)
+        general_path = os.path.join(base_dir, 'RecipeDB_general.csv')
+        ingredients_path = os.path.join(base_dir, 'RecipeDB_ingredient_phrase.csv')
 
-    # --- Load NEW recipes (merged from general + phrase) ---
-    general_df = pd.read_csv("RecipeDB_general.csv")
-    phrase_df = pd.read_csv("RecipeDB_ingredient_phrase.csv")
+        general_df = pd.read_csv(general_path, encoding='utf-8', on_bad_lines='skip', low_memory=False)
+        ingredients_df = pd.read_csv(ingredients_path, encoding='utf-8', on_bad_lines='skip')
 
-    phrase_df['ingredient_Phrase'] = phrase_df['ingredient_Phrase'].fillna('')
-    grouped_ingredients = phrase_df.groupby('recipe_no')['ingredient_Phrase'].apply(lambda x: ', '.join(x)).reset_index()
+        general_df.columns = general_df.columns.str.strip()
+        ingredients_df.columns = ingredients_df.columns.str.strip()
+        diet_cols = {
+            'vegan': 'Vegan',
+            'ovo_lacto_vegetarian': 'Vegetarian',
+            'pescetarian': 'Pescetarian'
+        }
+        
+        general_df['Dietary'] = ''
+        for col, tag in diet_cols.items():
+            if col in general_df.columns:
+                general_df.loc[general_df[col] == 1, 'Dietary'] += tag + ' '
+        
+        required_cols = ['Recipe_id', 'Recipe_title', 'total_time', 'servings', 'url', 'Region', 'Dietary']
+        if not all(col in general_df.columns for col in required_cols):
+            missing = [col for col in required_cols if col not in general_df.columns]
+            raise ValueError(f"Missing required columns in RecipeDB_general.csv: {missing}")
 
-    merged_df = pd.merge(general_df, grouped_ingredients, left_on='Recipe_id', right_on='recipe_no', how='inner')
+        recipes_df = general_df[required_cols].copy()
+        recipes_df = recipes_df.rename(columns={
+            'Recipe_id': 'RecipeID',
+            'Recipe_title': 'Recipe Name',
+            'total_time': 'Total Time',
+            'servings': 'Servings',
+            'url': 'Recipe URL',
+            'Region': 'Cuisine'
+        })
 
-    # Standardize column names
-    merged_df = merged_df.rename(columns={
-        "ingredient_Phrase": "Ingredients",
-        "Recipe_id": "RecipeID",
-        "servings": "Servings",
-        "cook_time": "Total Time"
-    })
-    merged_df["Recipe Name"] = "Recipe #" + merged_df["RecipeID"].astype(str)
-    merged_df["Recipe URL"] = "https://example.com/recipe/" + merged_df["RecipeID"].astype(str)
-    merged_df.dropna(subset=["Ingredients"], inplace=True)
-    merged_df["full_text"] = merged_df["Recipe Name"] + " " + merged_df["Ingredients"]
+        ingredients_df['ingredient_Phrase'] = ingredients_df['ingredient_Phrase'].fillna('')
+        grouped_ingredients = ingredients_df.groupby('recipe_no')['ingredient_Phrase'].apply(lambda x: ', '.join(x)).reset_index()
 
-    # --- Combine both ---
-    common_columns = ["Recipe Name", "Recipe URL", "Ingredients", "Total Time", "Servings", "full_text"]
-    combined_df = pd.concat([
-        old_df[common_columns],
-        merged_df[common_columns]
-    ], ignore_index=True)
+        merged_df = pd.merge(recipes_df, grouped_ingredients, left_on='RecipeID', right_on='recipe_no', how='left')
+        merged_df = merged_df.rename(columns={'ingredient_Phrase': 'Ingredients'})
+        
+        for col in ['Recipe Name', 'Ingredients', 'Cuisine', 'Dietary']:
+            merged_df[col] = merged_df[col].fillna('')
+            
+        merged_df['full_text'] = (
+            merged_df['Recipe Name'] + ' ' + 
+            merged_df['Ingredients'] + ' ' + 
+            merged_df['Cuisine'] + ' ' +
+            merged_df['Dietary']
+        ).str.lower()
+        
+        print("Data loaded and dietary tags built successfully! The chatbot is ready.")
+        print(f"Total recipes loaded: {len(merged_df)}")
+        return merged_df
 
-    return combined_df
+    except Exception as e:
+        print(f"CRITICAL ERROR during data loading: {e}.")
+        return pd.DataFrame()
 
-
-# Build TF-IDF vectorizer
 def build_vectorizer(df):
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(df["full_text"])
+    if df.empty or df['full_text'].str.strip().eq('').all():
+        vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+        return vectorizer, vectorizer.fit_transform([])
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+    tfidf_matrix = vectorizer.fit_transform(df['full_text'])
     return vectorizer, tfidf_matrix
 
-# Expand nutrient queries
 def expand_query(query):
-    query_lower = query.lower()
-    for nutrient, ingredients in nutrient_map.items():
-        if nutrient in query_lower:
-            return query + " " + " ".join(ingredients)
-    return query
+    original_query = query.lower()
+    expanded_terms = set()
+    for key, ingredients in nutrient_map.items():
+        if key in original_query:
+            expanded_terms.update(ingredients)
+    for word in original_query.split():
+        if word in ingredient_to_nutrient_map:
+            expanded_terms.add(ingredient_to_nutrient_map[word])
+    return original_query + " " + " ".join(expanded_terms)
 
-# Find recipe matches
-def get_recipe_matches(query, df, vectorizer, tfidf_matrix, top_n=3):
+def get_recipe_matches(query, df, vectorizer, tfidf_matrix, user_profile=None, filters=None, top_n=5):
+    if df.empty or tfidf_matrix.shape[0] == 0:
+        return pd.DataFrame()
+    filtered_df = df.copy()
+
+    if user_profile and user_profile.diet:
+        if 'Dietary' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['Dietary'].str.contains(user_profile.diet, case=False, na=False)]
+
+    if filters:
+        if filters.cuisine and 'Cuisine' in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df['Cuisine'].str.contains(filters.cuisine, case=False, na=False)]
+        if filters.cook_time and 'Total Time' in filtered_df.columns:
+            filtered_df['Total Time'] = pd.to_numeric(filtered_df['Total Time'], errors='coerce')
+            filtered_df = filtered_df.dropna(subset=['Total Time'])
+            filtered_df = filtered_df[filtered_df['Total Time'] <= filters.cook_time]
+
+    if filtered_df.empty:
+        return pd.DataFrame()
+
+    filtered_indices = filtered_df.index
+    filtered_tfidf_matrix = tfidf_matrix[filtered_indices]
+
     expanded_query = expand_query(query)
     query_vec = vectorizer.transform([expanded_query])
-    similarities = cosine_similarity(query_vec, tfidf_matrix).flatten()
-    top_indices = similarities.argsort()[-top_n:][::-1]
-    return df.iloc[top_indices]
+    
+    similarities = cosine_similarity(query_vec, filtered_tfidf_matrix).flatten()
+    
+    if similarities.max() == 0:
+        return pd.DataFrame()
+        
+    top_indices_in_filtered_df = similarities.argsort()[-top_n:][::-1]
+    
+    return filtered_df.iloc[top_indices_in_filtered_df]
 
-# Suggest ingredient substitutions
 def get_substitution(ingredient):
     return substitutions.get(ingredient.lower(), [])
 
-# NEW: Get information from the knowledge base
 def get_health_info(query):
-    query_lower = query.lower()
     for keyword, info in health_benefits_info.items():
-        if keyword in query_lower:
+        if keyword in query.lower():
             return info
     return None
+
+def translate_text(text, src_lang, dest_lang):
+    if not isinstance(text, str): return text
+
+    translation_map = translations_db.get(dest_lang, {})
+    if text in translation_map: return translation_map[text]
+
+    words = text.split()
+    translated_words = [translation_map.get(word, word) for word in words]
+    
+    return " ".join(translated_words)

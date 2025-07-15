@@ -1,4 +1,3 @@
-# Import the new function
 from chatbot_core import load_data, build_vectorizer, get_recipe_matches, get_substitution, get_health_info
 
 df = load_data()

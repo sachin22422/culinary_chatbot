@@ -5,237 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Culinary Assistant</title>
     <style>
-        /* General Styling */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        /* Main Chat Container */
-        #chat-container {
-            width: 90%;
-            max-width: 600px;
-            height: 90vh;
-            max-height: 800px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px D20px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Chat Header */
-        #chat-header {
-            background: linear-gradient(135deg, #4CAF50, #81C784);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex-shrink: 0;
-        }
-
-        /* Message Window */
-        #chat-window {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        /* General Message Bubble Styling */
-        .message {
-            padding: 12px 18px;
-            border-radius: 20px;
-            max-width: 80%;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        /* User Message Styling */
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-
-        /* Bot Message Styling */
-        .bot-message {
-            background-color: #e9e9eb;
-            color: #333;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-        
-        /* Loading Message Styling */
-        .bot-message.loading {
-            color: #888;
-            font-style: italic;
-        }
-
-        .bot-message a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .bot-message a:hover {
-            text-decoration: underline;
-        }
-        
-        .bot-message strong {
-            color: #2c3e50;
-        }
-
-        /* Input Form */
-        #chat-form {
-            display: flex;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-            background-color: #f9f9f9;
-            flex-shrink: 0;
-        }
-
-        #chat-input {
-            flex-grow: 1;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            padding: 10px 15px;
-            font-size: 1em;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #chat-input:focus {
-            border-color: #4CAF50;
-        }
-
-        #send-button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            margin-left: 10px;
-            cursor: pointer;
-            font-size: 1.5em;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.2s;
-        }
-
-        #send-button:hover {
-            background-color: #45a049;
-        }
+        :root { --background-color: #f4f7f6; --container-bg-color: #ffffff; --header-bg-color: linear-gradient(135deg, #4CAF50, #81C784); --user-message-bg-color: #007bff; --bot-message-bg-color: #e9e9eb; --text-color: #333; --invert-icon-color: 0; }
+        .dark-mode { --background-color: #121212; --container-bg-color: #1e1e1e; --header-bg-color: linear-gradient(135deg, #2a3e2b, #4a745e); --user-message-bg-color: #0056b3; --bot-message-bg-color: #333; --text-color: #f4f7f6; --invert-icon-color: 1; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #chat-container { width: 90%; max-width: 600px; height: 90vh; max-height: 800px; background-color: var(--container-bg-color); border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; overflow: hidden; }
+        #chat-header { background: var(--header-bg-color); color: white; padding: 12px 20px; text-align: center; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        #settings-container { display: flex; align-items: center; gap: 15px; }
+        #theme-toggle, #reset-profile-btn { cursor: pointer; filter: invert(var(--invert-icon-color)); width: 24px; height: 24px; }
+        #lang-select { background-color: transparent; color: white; border: none; font-size: 1em; cursor: pointer; }
+        #lang-select option { color: #000; }
+        #chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { padding: 12px 18px; border-radius: 20px; max-width: 80%; line-height: 1.5; word-wrap: break-word; }
+        .user-message { background-color: var(--user-message-bg-color); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .bot-message { background-color: var(--bot-message-bg-color); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 5px; }
+        .bot-message.loading { color: #888; font-style: italic; } .bot-message a { color: #4CAF50; text-decoration: none; font-weight: bold; } .bot-message a:hover { text-decoration: underline; } .bot-message strong { color: #2c3e50; }
+        #chat-form-container { padding: 15px; border-top: 1px solid #ddd; background-color: var(--container-bg-color); flex-shrink: 0; }
+        #filters { display: flex; gap: 10px; margin-bottom: 10px; } .filter-select { flex-grow: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc; } #chat-form { display: flex; align-items: center; }
+        #chat-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 1em; outline: none; transition: border-color 0.2s; }
+        #chat-input:focus { border-color: #4CAF50; }
+        #mic-btn, #send-btn { background-color: transparent; color: var(--text-color); border: none; border-radius: 50%; width: 45px; height: 45px; margin-left: 10px; cursor: pointer; font-size: 1.5em; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; }
+        #mic-btn img, #send-btn img { width: 24px; height: 24px; filter: invert(var(--invert-icon-color)); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: var(--container-bg-color); margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 10px; text-align: center; }
+        .modal-content input, .modal-content select { width: 90%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .modal-content button { margin-top: 20px; padding: 10px 20px; border-radius: 5px; border: none; background-color: #4CAF50; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">🍽️ Culinary Assistant</div>
-        <div id="chat-window">
-             <div class="bot-message">Hello! Ask me for recipes, ingredient substitutions, or health benefits. For example: "What are some chicken recipes high in protein?"</div>
+        <div id="chat-header">
+            <span id="header-title">Culinary Assistant</span>
+            <div id="settings-container">
+                <select id="lang-select"><option value="en">English</option><option value="hi">Hindi</option></select>
+                <img id="reset-profile-btn" src="https://img.icons8.com/ios-glyphs/30/synchronize.png" alt="Reset Profile" title="Reset Profile"/>
+                <img id="theme-toggle" src="https://img.icons8.com/ios-glyphs/30/sun.png" alt="Toggle Theme" title="Toggle Theme"/>
+            </div>
         </div>
-        <form id="chat-form">
-            <input type="text" id="chat-input" placeholder="Ask a food question..." autocomplete="off" required>
-            <button id="send-button" type="submit">➤</button>
-        </form>
+        <div id="chat-window"><div class="bot-message" id="initial-message">Hello! I can help with recipes, substitutions, and health benefits of ingredients.</div></div>
+        <div id="chat-form-container">
+            <div id="filters">
+                <select id="cuisine-filter" class="filter-select"><option value="">All Cuisines</option><option value="Italian">Italian</option><option value="Mexican">Mexican</option><option value="Indian">Indian</option></select>
+                <select id="time-filter" class="filter-select"><option value="">Any Time</option><option value="30">Under 30 min</option><option value="60">Under 1 hour</option></select>
+            </div>
+            <form id="chat-form">
+                <input type="text" id="chat-input" placeholder="Ask a food question..." autocomplete="off" required>
+                <button id="mic-btn" type="button"><img src="https://img.icons8.com/ios-glyphs/30/microphone.png" alt="Mic"/></button>
+                <button id="send-btn" type="submit">➤</button>
+            </form>
+        </div>
     </div>
-
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <h2>Welcome!</h2><p>To personalize your experience, please tell us your name and dietary preferences.</p>
+            <input type="text" id="name-input" placeholder="Your Name" required>
+            <select id="diet-prefs"><option value="">No preference</option><option value="Vegan">Vegan</option><option value="Vegetarian">Vegetarian</option><option value="Keto">Keto</option></select>
+            <button id="save-profile">Save</button>
+        </div>
+    </div>
     <script>
-        // Get references to the HTML elements we need to interact with
-        const chatWindow = document.getElementById('chat-window');
-        const chatForm = document.getElementById('chat-form');
-        const chatInput = document.getElementById('chat-input');
-        const apiUrl = 'http://127.0.0.1:8000/ask';
-
-        // Listen for the form submission
-        chatForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent the default form submission (page reload)
-            const userQuery = chatInput.value.trim();
-            if (!userQuery) return; // Don't send empty messages
-
-            // 1. Display the user's message immediately
-            addMessage(userQuery, 'user');
-            chatInput.value = '';
-            
-            // 2. Display a "loading" message for better UX
-            const loadingMessage = addMessage('Thinking...', 'bot', true);
-            
-            try {
-                // 3. Send the query to the backend API
-                const response = await fetch(`${apiUrl}?query=${encodeURIComponent(userQuery)}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                
-                // 4. Remove the "loading" message and display the actual response
-                chatWindow.removeChild(loadingMessage); 
-                displayBotResponse(data);
-
-            } catch (error) {
-                // Handle errors (e.g., server is down)
-                chatWindow.removeChild(loadingMessage);
-                addMessage('Sorry, something went wrong. Please check if the server is running and try again.', 'bot');
-                console.error('Error fetching data:', error);
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatWindow = document.getElementById("chat-window"); const chatForm = document.getElementById("chat-form"); const chatInput = document.getElementById("chat-input"); const themeToggle = document.getElementById("theme-toggle"); const profileModal = document.getElementById("profile-modal"); const saveProfileBtn = document.getElementById("save-profile"); const resetProfileBtn = document.getElementById("reset-profile-btn");
+            const apiUrl = "/ask"; let userProfile = JSON.parse(localStorage.getItem('userProfile'));
+            const currentTheme = localStorage.getItem("theme"); if (currentTheme === "dark") { document.body.classList.add("dark-mode"); }
+            themeToggle.addEventListener("click", () => { document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); });
+            function setupUserProfile() { userProfile = JSON.parse(localStorage.getItem('userProfile')); if (!userProfile) { profileModal.style.display = 'block'; document.getElementById('initial-message').textContent = 'Hello! I can help with recipes, substitutions, and health benefits of ingredients.'; } else { profileModal.style.display = 'none'; document.getElementById('initial-message').innerHTML = `Hello, ${userProfile.name}! How can I help you today?`; } }
+            setupUserProfile();
+            saveProfileBtn.addEventListener('click', () => { const name = document.getElementById('name-input').value; const diet = document.getElementById('diet-prefs').value; if(name) { userProfile = { name, diet }; localStorage.setItem('userProfile', JSON.stringify(userProfile)); setupUserProfile(); } });
+            resetProfileBtn.addEventListener('click', () => { localStorage.removeItem('userProfile'); location.reload(); });
+            const langSelect = document.getElementById("lang-select"); const micBtn = document.getElementById("mic-btn"); const translations = { 'hi': { 'Thinking...': 'सोच रहा हूँ...','Sorry, something went wrong.': 'माफ़ कीजिए, कुछ गड़बड़ हो गई।','Good substitutes for': 'के लिए अच्छे विकल्प','are': 'हैं','Here are some recipes I found for you:': 'यहाँ आपके लिए कुछ रेसिपी हैं:','Time:': 'समय:','Servings:': 'सर्विंग्स:','Hello! I can help with recipes, substitutions, and health benefits of ingredients.': 'नमस्ते! मैं रेसिपी, सामग्री के विकल्प और स्वास्थ्य लाभों में मदद कर सकता हूँ।'} };
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (SpeechRecognition) { const recognition = new SpeechRecognition(); recognition.continuous = false; micBtn.addEventListener("click", () => { recognition.lang = langSelect.value === 'hi' ? 'hi-IN' : 'en-US'; recognition.start(); }); recognition.onresult = (event) => { chatInput.value = event.results[0][0].transcript; chatForm.dispatchEvent(new Event('submit')); }; recognition.onerror = (event) => addMessage(`Voice recognition error: ${event.error}`, 'bot'); } else { micBtn.style.display = 'none'; }
+            chatForm.addEventListener("submit", async (event) => {
+                event.preventDefault(); const userQuery = chatInput.value.trim(); if (!userQuery) return; addMessage(userQuery, "user"); chatInput.value = ""; const loadingMessage = addMessage(translate('Thinking...', langSelect.value), 'bot', true);
+                const cuisineFilter = document.getElementById('cuisine-filter').value; const timeFilter = document.getElementById('time-filter').value;
+                const requestBody = { query: userQuery, user_profile: userProfile, filters: { cuisine: cuisineFilter, cook_time: timeFilter ? parseInt(timeFilter, 10) : null }, language: langSelect.value };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json(); chatWindow.removeChild(loadingMessage); displayBotResponse(data);
+                } catch (error) { chatWindow.removeChild(loadingMessage); addMessage(translate('Sorry, something went wrong.', langSelect.value), "bot"); console.error("Error fetching data:", error); }
+            });
+            function addMessage(text, sender, isLoading = false) { const messageElement = document.createElement("div"); messageElement.classList.add("message", `${sender}-message`); if (isLoading) messageElement.classList.add("loading"); messageElement.innerHTML = text; chatWindow.appendChild(messageElement); chatWindow.scrollTop = chatWindow.scrollHeight; return messageElement; }
+            function displayBotResponse(data) {
+                let botHtml = ""; const lang = langSelect.value;
+                if (data.type === 'recipes' && data.results.length > 0) { botHtml = `<strong>${translate('Here are some recipes I found for you:', lang)}</strong><br><br>`; data.results.forEach(recipe => { botHtml += `<strong>${recipe.name}</strong><br><a href="${recipe.url}" target="_blank">View Recipe</a><br><small>${translate('Time:', lang)} ${recipe.time || 'N/A'} | ${translate('Servings:', lang)} ${recipe.servings || 'N/A'}</small><br><br>`; }); }
+                else if (data.type === 'substitution') { botHtml = `${translate('Good substitutes for', lang)} <strong>${data.ingredient}</strong> ${translate('are', lang)}: ${data.alternatives.join(", ")}`; }
+                else if (data.type === 'info') { botHtml = data.message; }
+                else { botHtml = translate("I couldn't find any recipes matching your query. Please try different keywords!", lang); }
+                addMessage(botHtml, 'bot');
             }
+            function translate(text, lang) { if (lang === 'hi' && translations.hi[text]) { return translations.hi[text]; } return text; }
         });
-
-        // Function to create and append a new message to the chat window
-        function addMessage(text, sender, isLoading = false) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${sender}-message`);
-            if (isLoading) {
-                messageElement.classList.add('loading');
-            }
-            messageElement.innerHTML = text; // Use innerHTML to correctly render HTML tags like <a> and <strong>
-            chatWindow.appendChild(messageElement);
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll to the latest message
-            return messageElement;
-        }
-
-        // Function to parse the API data and format the bot's response
-        function displayBotResponse(data) {
-            let botHtml = '';
-
-            // Handle RECIPE responses
-            if (data.type === 'recipes' && data.results.length > 0) {
-                botHtml = 'Here are some recipes I found for you:<br><br>';
-                data.results.forEach(recipe => {
-                    botHtml += `
-                        <strong>${recipe.name}</strong><br>
-                        <a href="${recipe.url}" target="_blank">View Recipe</a><br>
-                        <small>Time: ${recipe.time || 'N/A'} | Servings: ${recipe.servings || 'N/A'}</small><br><br>
-                    `;
-                });
-            
-            // Handle SUBSTITUTION responses
-            } else if (data.type === 'substitution') {
-                botHtml = `Good substitutes for <strong>${data.ingredient}</strong> are: ${data.alternatives.join(', ')}.`;
-
-            // Handle INFO responses (including "not found" messages)
-            } else if (data.type === 'info') {
-                botHtml = data.message;
-            
-            // Handle any other unexpected response
-            } else {
-                botHtml = "I'm not sure how to answer that. Please try rephrasing.";
-            }
-
-            addMessage(botHtml, 'bot');
-        }
     </script>
 </body>
 </html>

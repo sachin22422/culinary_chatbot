@@ -1,74 +1,102 @@
-from fastapi import FastAPI, Query
-# Make sure to import the new get_health_info function
-from chatbot_core import load_data, build_vectorizer, get_recipe_matches, get_substitution, get_health_info
+from fastapi import FastAPI
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List
+
+from chatbot_core import (
+    load_data, 
+    build_vectorizer, 
+    get_recipe_matches,
+    get_substitution, 
+    get_health_info, 
+    translate_text
+)
+
+class UserProfile(BaseModel):
+    name: Optional[str] = None
+    diet: Optional[str] = None
+
+class Filters(BaseModel):
+    cuisine: Optional[str] = None
+    cook_time: Optional[int] = None
+
+class AskRequest(BaseModel):
+    query: str
+    user_profile: Optional[UserProfile] = None
+    filters: Optional[Filters] = None
+    language: Optional[str] = 'en'
 
 app = FastAPI()
+
 df = load_data()
 vectorizer, tfidf_matrix = build_vectorizer(df)
 
-# Allow cross-origin requests so your index.html can talk to the server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows all origins, you can restrict this in production
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], # Allows all HTTP methods
-    allow_headers=["*"], # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-@app.get("/ask")
-def ask(query: str = Query(..., description="Ask a food-related question")):
+@app.get("/")
+async def read_index():
+    return FileResponse('index.html')
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
+
+@app.post("/ask")
+def ask(request: AskRequest):
+    query = request.query
+    lang = request.language
+
+    if lang != 'en' and query:
+        query = translate_text(query, src_lang=lang, dest_lang='en')
+
     query_lower = query.lower()
-
-    # --- The Core Logic ---
-    # The order of these checks is important to handle user intent correctly.
-
-    # 1. Check for specific health benefit/informational queries first.
-    # This catches "what are the benefits of turmeric" before it becomes a recipe search.
+    
     info = get_health_info(query_lower)
     if info:
-        return {
-            "type": "info",
-            "message": info
-        }
+        if lang != 'en':
+            info = translate_text(info, src_lang='en', dest_lang=lang)
+        return {"type": "info", "message": info}
 
-    # 2. Next, check for substitution queries.
     if "replace" in query_lower or "substitute" in query_lower:
         for word in query_lower.split():
             subs = get_substitution(word)
             if subs:
-                return {
-                    "type": "substitution",
-                    "ingredient": word,
-                    "alternatives": subs
-                }
-        # If the query had "substitute" but no match was found
-        return {
-            "type": "info", # Use the generic 'info' type for a simple message
-            "message": "Sorry, I couldn't find a specific substitution for that. You can try asking for recipes that don't use the ingredient."
-        }
+                response = { "type": "substitution", "ingredient": word, "alternatives": subs }
+                if lang != 'en':
+                    response['alternatives'] = [translate_text(alt, 'en', lang) for alt in subs]
+                return response
+        message = "Sorry, I couldn't find a specific substitution for that."
+        if lang != 'en':
+            message = translate_text(message, 'en', lang)
+        return {"type": "info", "message": message}
 
-    # 3. If neither of the above, default to a recipe search.
-    matches = get_recipe_matches(query, df, vectorizer, tfidf_matrix)
+    matches = get_recipe_matches(query_lower, df, vectorizer, tfidf_matrix, request.user_profile, request.filters)
     
-    # Handle case where no recipes are found
     if matches.empty:
-         return {
-            "type": "info",
-            "message": "I couldn't find any recipes matching your query. Please try different keywords!"
-        }
+        message = "I couldn't find any recipes matching your query. Please try different keywords!"
+        if lang != 'en':
+            message = translate_text(message, 'en', lang)
+        return {"type": "info", "message": message}
 
     results = []
     for _, row in matches.iterrows():
+        name = row["Recipe Name"]
+        if lang != 'en':
+            name = translate_text(name, 'en', lang)
+        
         results.append({
-            "name": row["Recipe Name"],
+            "name": name,
             "url": row["Recipe URL"],
             "ingredients": row["Ingredients"],
             "time": row["Total Time"],
             "servings": row["Servings"]
         })
-        
-    return {
-        "type": "recipes",
-        "results": results
-    }
+
+    return {"type": "recipes", "results": results}
