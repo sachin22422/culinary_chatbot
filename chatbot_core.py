@@ -50,7 +50,8 @@ translations_db = {
 
 def load_data():
     """
-    Loads, merges, and correctly populates the 'Dietary' column for filtering.
+    Loads, merges, and correctly populates the 'Dietary' column for filtering,
+    including special handling for a comprehensive set of dietary preferences.
     """
     try:
         base_dir = os.path.dirname(__file__)
@@ -60,58 +61,72 @@ def load_data():
         general_df = pd.read_csv(general_path, encoding='utf-8', on_bad_lines='skip', low_memory=False)
         ingredients_df = pd.read_csv(ingredients_path, encoding='utf-8', on_bad_lines='skip')
 
-        general_df.columns = general_df.columns.str.strip()
-        ingredients_df.columns = ingredients_df.columns.str.strip()
+        general_df.columns = general_df.columns.str.strip().str.lower()
+        ingredients_df.columns = ingredients_df.columns.str.strip().str.lower()
+        
         diet_cols = {
             'vegan': 'Vegan',
             'ovo_lacto_vegetarian': 'Vegetarian',
-            'pescetarian': 'Pescetarian'
+            'pescetarian': 'Pescetarian',
+            'keto_friendly': 'Keto',
+            'gluten_free': 'Gluten-Free',
+            'dairy_free': 'Dairy-Free',
+            'low_carb': 'Low-Carb',
+            'low_fat': 'Low-Fat',
+            'nut_free': 'Nut-Free'
         }
-        
-        general_df['Dietary'] = ''
+
+        general_df['dietary'] = ''
         for col, tag in diet_cols.items():
             if col in general_df.columns:
-                general_df.loc[general_df[col] == 1, 'Dietary'] += tag + ' '
+                general_df[col] = pd.to_numeric(general_df[col], errors='coerce')
+                general_df.loc[general_df[col] == 1, 'dietary'] += tag + ' '
         
-        required_cols = ['Recipe_id', 'Recipe_title', 'total_time', 'servings', 'url', 'Region', 'Dietary']
+        is_vegetarian_type = general_df['dietary'].str.contains('Vegan|Vegetarian|Pescetarian', case=False, na=False)
+        general_df.loc[~is_vegetarian_type, 'dietary'] += 'Non-Vegetarian '
+
+        required_cols = ['recipe_id', 'recipe_title', 'total_time', 'servings', 'url', 'region', 'dietary']
+
         if not all(col in general_df.columns for col in required_cols):
             missing = [col for col in required_cols if col not in general_df.columns]
             raise ValueError(f"Missing required columns in RecipeDB_general.csv: {missing}")
 
         recipes_df = general_df[required_cols].copy()
+        
         recipes_df = recipes_df.rename(columns={
-            'Recipe_id': 'RecipeID',
-            'Recipe_title': 'Recipe Name',
+            'recipe_id': 'RecipeID',
+            'recipe_title': 'Recipe Name',
             'total_time': 'Total Time',
             'servings': 'Servings',
             'url': 'Recipe URL',
-            'Region': 'Cuisine'
+            'region': 'Cuisine',
+            'dietary': 'Dietary'
         })
 
-        ingredients_df['ingredient_Phrase'] = ingredients_df['ingredient_Phrase'].fillna('')
-        grouped_ingredients = ingredients_df.groupby('recipe_no')['ingredient_Phrase'].apply(lambda x: ', '.join(x)).reset_index()
-
-        merged_df = pd.merge(recipes_df, grouped_ingredients, left_on='RecipeID', right_on='recipe_no', how='left')
-        merged_df = merged_df.rename(columns={'ingredient_Phrase': 'Ingredients'})
+        ingredients_df['ingredient_phrase'] = ingredients_df['ingredient_phrase'].fillna('')
+        grouped_ingredients = ingredients_df.groupby('recipe_no')['ingredient_phrase'].apply(lambda x: ', '.join(x))
+        grouped_ingredients = grouped_ingredients.rename('Ingredients')
         
-        for col in ['Recipe Name', 'Ingredients', 'Cuisine', 'Dietary']:
+        merged_df = pd.merge(recipes_df, grouped_ingredients, left_on='RecipeID', right_on='recipe_no', how='left')
+        
+        for col in ['Ingredients', 'Cuisine', 'Dietary']:
             merged_df[col] = merged_df[col].fillna('')
-            
+
+        merged_df['Recipe Name'] = merged_df['Recipe Name'].fillna('')
+
         merged_df['full_text'] = (
-            merged_df['Recipe Name'] + ' ' + 
-            merged_df['Ingredients'] + ' ' + 
+            merged_df['Recipe Name'] + ' ' +
+            merged_df['Ingredients'] + ' ' +
             merged_df['Cuisine'] + ' ' +
             merged_df['Dietary']
         ).str.lower()
         
-        print("Data loaded and dietary tags built successfully! The chatbot is ready.")
-        print(f"Total recipes loaded: {len(merged_df)}")
+        print(f"Total recipes loaded: {len(merged_df)}. The chatbot is ready.")
         return merged_df
 
     except Exception as e:
-        print(f"CRITICAL ERROR during data loading: {e}.")
+        print(f"CRITICAL ERROR during data loading: {e}")
         return pd.DataFrame()
-
 def build_vectorizer(df):
     if df.empty or df['full_text'].str.strip().eq('').all():
         vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
