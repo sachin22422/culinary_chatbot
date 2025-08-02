@@ -1,74 +1,64 @@
 Culinary Assistant AI
-An intelligent, interactive Culinary Assistant designed to help you discover recipes through natural conversation. It provides a seamless experience for finding meals based on ingredients, cuisine, dietary needs, and more, all within a clean and modern web interface.
-<br>
-<img width="824" height="898" alt="image" src="https://github.com/user-attachments/assets/dce8c46a-c771-4afd-bfb5-b10795d71dbe" />
+A sophisticated, AI-powered chatbot designed to be your ultimate kitchen companion. This is more than just a recipe finder; it's a culinary expert that understands natural language to help you with everything from meal planning and nutritional queries to ingredient substitutions and cooking knowledge.
+![alt text](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
 
-✨ Key Features
-Conversational AI: Utilizes Natural Language Processing to understand and respond to user queries in a human-like manner.
-Advanced Search: Find recipes by name, ingredients, cuisine, or cooking time using the intuitive chat interface and filter dropdowns.
-Voice-to-Text: Includes a speech recognition option for hands-free interaction.
-Modern UI: A clean, responsive user interface with both Light & Dark modes.
-Scalable Backend: Built with FastAPI and Uvicorn, ensuring high performance and asynchronous capabilities.
-Robust Data Handling: Manages a large dataset of over 100,000 recipes efficiently using Pandas.
+![alt text](https://img.shields.io/badge/FastAPI-0.95%2B-green?style=for-the-badge&logo=fastapi)
+
+![alt text](https://img.shields.io/badge/SciKit--Learn-1.2%2B-orange?style=for-the-badge&logo=scikit-learn)
+This project leverages a powerful backend to parse complex user requests and deliver precise, helpful answers, making your culinary journey easier and more inspiring.
+(This is your provided screenshot. For an even better demo, consider recording a short GIF of the interaction and replacing this image.)
+🌟 Key Features
+The Culinary Assistant is built to handle a wide array of food-related questions. Its core strengths are categorized below:
+1. Intelligent Recipe Search
+Go beyond simple keywords. The chatbot understands context to find what you're looking for.
+Direct Search: "lentil soup", "egyptian flatbread"
+Ingredient-Based Search: "recipes with carrots and celery", "chickpea recipes"
+2. Nutritional & Health-Based Queries
+Plan your meals according to your health goals. The assistant can filter recipes based on detailed nutritional information.
+Nutrient-Specific: "high protein meals", "iron rich recipes"
+Vitamin-Focused: "vitamin a recipes", "high vitamin c food"
+3. Culinary Knowledge & Substitutions
+Stuck in the middle of a recipe? Get instant help with substitutions and culinary facts.
+Ingredient Substitutions: "what can I substitute for butter?", "replace egg in a cake"
+Health Benefits: "what are the benefits of turmeric?", "why is quinoa good for you?"
+4. Advanced Filtering & Personalization
+Tailor your search results using powerful filters and dietary preferences.
+Cuisine & Time: Filter by "Indian", "Italian", or cooking time like "Under 30 min".
+Dietary Needs: Set preferences like "Vegan" or "Gluten-Free" for personalized recommendations across all searches.
+🛠️ Tech Stack & Architecture
+This project uses a modern, efficient tech stack to deliver a fast and responsive user experience.
+Backend: Python
+API Framework: FastAPI for high-performance asynchronous request handling.
+Web Server: Uvicorn as the lightning-fast ASGI server.
+Data Processing: Pandas for managing and searching the extensive recipe dataset.
+Natural Language Processing: Scikit-learn (TF-IDF Vectorizer) for transforming user queries into a machine-readable format to find the most relevant recipes.
+Frontend: A clean and simple interface built with HTML and CSS.
 🚀 Getting Started
-Follow these instructions to set up and run a local instance of the Culinary Assistant.
+Follow these instructions to set up and run the Culinary Assistant on your local machine.
 Prerequisites
-Python 3.9+
-pip package manager
+Python 3.8+
+Git
 Installation & Setup
-Clone the Repository
-Generated sh
+Clone the repository:
 git clone https://github.com/sachin22422/culinary_chatbot.git
 cd culinary_chatbot
-Use code with caution.
-Sh
-Create and Activate a Virtual Environment
-Generated sh
-# On Windows
+Create and activate a virtual environment:
+On Windows:
 python -m venv venv
 .\venv\Scripts\activate
-
-# On macOS/Linux
+On macOS/Linux:
 python3 -m venv venv
 source venv/bin/activate
-Use code with caution.
-Sh
-Install Dependencies
-It is recommended to first create a requirements.txt file. While your virtual environment is active, run: pip freeze > requirements.txt
-Then, install the required packages:
-Generated sh
-pip install -r requirements.txt
-Use code with caution.
-Sh
+Install the required dependencies:
+(First, ensure you have a requirements.txt file. If not, create one with pip freeze > requirements.txt after installing the packages below.)
+pip install fastapi uvicorn python-multipart pandas scikit-learn
 Running the Application
-Start the Server
-Use Uvicorn to run the FastAPI application. The --reload flag enables hot-reloading for development.
-Generated sh
+Start the server:
+From the root directory of the project, run the following command. The --reload flag will automatically restart the server when you make changes to the code.
 uvicorn app:app --reload
-Use code with caution.
-Sh
-Access the Application
-Once the server is running, open your web browser and navigate to:
-http://127.0.0.1:8000
-📖 How to Use the Assistant
-The interface is designed to be intuitive. Here’s how to interact with the chatbot:
-Ask a Question:
-Simply type your food-related question into the input box at the bottom that says "Ask a food question..." and press Enter or click the send icon (▶).
-Use Filters for Specific Results:
-Cuisine Filter: Use the "All Cuisines" dropdown to narrow your search to a specific cuisine (e.g., Italian, Mexican, Indian).
-Time Filter: Use the "Any Time" dropdown to find recipes that can be prepared within a certain timeframe.
-Use Your Voice:
-Click the microphone icon (🎙️) to activate voice input. Speak your question clearly, and the chatbot will transcribe it for you.
-Change the Theme:
-Click the sun/moon icon (☀) in the top-right corner to toggle between light and dark modes.
-Start a New Conversation:
-Click the refresh icon (↺) in the top-right corner to clear the current chat and begin a new conversation.
-Example Interactions
-General query: "Can you find me a chicken recipe?"
-Filtered query: Select "Italian" from the cuisine dropdown and ask, "I'm looking for a vegetarian pasta dish."
-Voice query: Click the microphone and say, "Find me a dessert recipe that takes less than 30 minutes."
-🧪 Testing
-A suite of test cases has been developed to ensure the chatbot's reliability and the API's stability. To run the tests, use your preferred testing framework (e.g., pytest):
-Generated sh
-# (Example command, adjust as needed)
-pytest
+You will see a confirmation that the server is running:
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [xxxx] using WatchFiles
+Total recipes loaded: 118083. The chatbot is ready.
+Open the application:
+Open your web browser and navigate to http://127.0.0.1:8000. You can now interact with your Culinary Assistant!
