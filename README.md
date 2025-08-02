@@ -1,9 +1,8 @@
 Culinary Assistant AI
 An intelligent, interactive Culinary Assistant designed to help you discover recipes through natural conversation. It provides a seamless experience for finding meals based on ingredients, cuisine, dietary needs, and more, all within a clean and modern web interface.
 <br>
-<p align="center">
-<img src="https://i.imgur.com/qUaP08J.png" alt="Culinary Assistant Interface" width="700"/>
-</p>
+<img width="824" height="898" alt="image" src="https://github.com/user-attachments/assets/dce8c46a-c771-4afd-bfb5-b10795d71dbe" />
+
 ✨ Key Features
 Conversational AI: Utilizes Natural Language Processing to understand and respond to user queries in a human-like manner.
 Advanced Search: Find recipes by name, ingredients, cuisine, or cooking time using the intuitive chat interface and filter dropdowns.
