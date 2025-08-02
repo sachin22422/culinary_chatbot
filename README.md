@@ -1,4 +1,4 @@
-Culinary Assistant AI
+Culinary Assistant AI <br>
 A sophisticated, AI-powered chatbot designed to be your ultimate kitchen companion. This is more than just a recipe finder; it's a culinary expert that understands natural language to help you with everything from meal planning and nutritional queries to ingredient substitutions and cooking knowledge.
 ![alt text](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
 
@@ -6,7 +6,7 @@ A sophisticated, AI-powered chatbot designed to be your ultimate kitchen compani
 
 ![alt text](https://img.shields.io/badge/SciKit--Learn-1.2%2B-orange?style=for-the-badge&logo=scikit-learn)
 This project leverages a powerful backend to parse complex user requests and deliver precise, helpful answers, making your culinary journey easier and more inspiring.
-(This is your provided screenshot. For an even better demo, consider recording a short GIF of the interaction and replacing this image.)
+
 🌟 Key Features
 The Culinary Assistant is built to handle a wide array of food-related questions. Its core strengths are categorized below:
 1. Intelligent Recipe Search
