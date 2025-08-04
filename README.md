@@ -1,6 +1,7 @@
-🧠🍳 Culinary Assistant AI
+Culinary Assistant AI
 
 **Culinary Assistant AI** is a sophisticated, AI-powered chatbot designed to be your ultimate kitchen companion. It’s more than just a recipe finder—this intelligent assistant helps with meal planning, nutritional guidance, ingredient substitutions, and general culinary knowledge using natural language understanding.
+![02 08 2025_18 46 49_REC-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/d5530836-9c78-43ba-a2dd-1913be316139)
 
 <div align="center">
   <img src="https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python" />
